@@ -21,11 +21,11 @@ public class PathGenerator : MonoBehaviour {
         n = lastPowerOf2(n);
         Vector3 pos = new Vector3(-n / 2 + .5f, 0, -n / 2 + .5f);
         HilbertCurve.GenerateCurve(powerOf+1, pos, roomDist, roomSize);
-        HilbertCurve.DrawRooms(HilbertCurve.hilbertPoints, roomSize, Color.black);
+        HilbertCurve.DrawRooms(HilbertCurve.hilbertPoints, Color.black);
 
-        List<Vector3> subGrid = HilbertCurve.GetSubGrid(xOffset, yOffset, n, roomDist, roomSize);
-        List<Vector3> path = HilbertCurve.GeneratePath(HilbertCurve.hilbertPoints, subGrid, roomDist, roomSize, deadEndsNumb, maxRooms);
-        HilbertCurve.DrawRooms(path, roomSize, Color.white);
+        List<Vector3> subGrid = HilbertCurve.GetSubGrid(xOffset, yOffset, n);
+        List<Vector3> path = HilbertCurve.GeneratePath(HilbertCurve.hilbertPoints, subGrid, deadEndsNumb, maxRooms);
+        HilbertCurve.DrawRooms(path, Color.white);
         HilbertCurve.DrawPath(path, Color.red);
     }
 

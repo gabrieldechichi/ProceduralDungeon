@@ -6,6 +6,7 @@ public static class HilbertCurve {
 
     private static int size;
     public static List<Vector3> hilbertPoints = new List<Vector3>();
+    private static int roomDist, roomSize;
 
     public enum DIRECTION
     {
@@ -15,7 +16,7 @@ public static class HilbertCurve {
         RIGHT,
     };
 
-    public static List<Vector3> GetSubGrid(int xOffSet, int yOffset, int gridSize, int roomDist, int roomSize)
+    public static List<Vector3> GetSubGrid(int xOffSet, int yOffset, int gridSize)
     {
         Vector3 startPos = hilbertPoints[0] + Vector3.right * (roomDist +roomSize)* xOffSet + Vector3.forward * (roomDist + roomSize) * yOffset;
         List<Vector3> subGrid = new List<Vector3>();
@@ -33,7 +34,7 @@ public static class HilbertCurve {
         return subGrid;
     }
 
-    public static List<Vector3> GeneratePath(List<Vector3> grid, List<Vector3> subGrid, int roomDist, int roomSize, int maxRooms)
+    public static List<Vector3> GeneratePath(List<Vector3> grid, List<Vector3> subGrid, int maxRooms)
     {
         if (maxRooms == 0)
             maxRooms = subGrid.Count;
@@ -62,12 +63,12 @@ public static class HilbertCurve {
         return path;
     }
 
-    public static List<Vector3> GeneratePath(List<Vector3> grid, List<Vector3> subGrid, int roomDist, int roomSize, int maxDeadEnds, int maxPathSize)
+    public static List<Vector3> GeneratePath(List<Vector3> grid, List<Vector3> subGrid, int maxDeadEnds, int maxPathSize)
     {
-        return AddDeadEnds(GeneratePath(grid, subGrid, roomDist, roomSize, maxPathSize), subGrid, roomDist, roomSize, maxDeadEnds);
+        return AddDeadEnds(GeneratePath(grid, subGrid, maxPathSize), subGrid, maxDeadEnds);
     }
 
-    private static List<Vector3> AddDeadEnds(List<Vector3> path, List<Vector3> subGrid, int roomDist, int roomSize, int maxDeadEnds)
+    private static List<Vector3> AddDeadEnds(List<Vector3> path, List<Vector3> subGrid, int maxDeadEnds)
     {
         List<Vector3> neighboors = new List<Vector3>();
         List<Vector3> newPath = new List<Vector3>(path);
@@ -112,7 +113,7 @@ public static class HilbertCurve {
         }
     }
 
-    public static void DrawRooms(List<Vector3> rooms, float roomSize, Color color)
+    public static void DrawRooms(List<Vector3> rooms, Color color)
     {
         Gizmos.color = color;
         for (int i = 0; i < rooms.Count; i++)
@@ -121,7 +122,7 @@ public static class HilbertCurve {
         }
     }
 
-    public static void GenerateCurve(int level, Vector3 pos, float roomDist, float roomSize, DIRECTION direction = DIRECTION.UP)
+    public static void GenerateCurve(int level, Vector3 pos, int _roomDist, int _roomSize, DIRECTION direction = DIRECTION.UP)
     {
         size = (int)Mathf.Pow(2, level);
 
@@ -129,12 +130,15 @@ public static class HilbertCurve {
 
         hilbertPoints.Add(pos);
 
+        roomDist = _roomDist;
+        roomSize = _roomSize;
+
         Vector3 newPos = pos;
 
-        HilbertAlgorithm(level, ref newPos, roomDist, roomSize, direction);
+        HilbertAlgorithm(level, ref newPos, direction);
     }
 
-    public static void HilbertAlgorithm(int level, ref Vector3 pos, float roomDist, float roomSize, DIRECTION direction)
+    public static void HilbertAlgorithm(int level, ref Vector3 pos, DIRECTION direction)
     {
         if (level == 0)
             return;
@@ -144,24 +148,24 @@ public static class HilbertCurve {
             switch (direction)
             {
                 case DIRECTION.LEFT:
-                    ConnectLine(DIRECTION.RIGHT, ref pos, roomDist, roomSize);      
-                    ConnectLine(DIRECTION.DOWN, ref pos, roomDist, roomSize);      
-                    ConnectLine(DIRECTION.LEFT, ref pos, roomDist, roomSize);
+                    ConnectLine(DIRECTION.RIGHT, ref pos);      
+                    ConnectLine(DIRECTION.DOWN, ref pos);      
+                    ConnectLine(DIRECTION.LEFT, ref pos);
                     break;
                 case DIRECTION.RIGHT:
-                    ConnectLine(DIRECTION.LEFT, ref pos, roomDist, roomSize);
-                    ConnectLine(DIRECTION.UP, ref pos, roomDist, roomSize);
-                    ConnectLine(DIRECTION.RIGHT, ref pos, roomDist, roomSize);
+                    ConnectLine(DIRECTION.LEFT, ref pos);
+                    ConnectLine(DIRECTION.UP, ref pos);
+                    ConnectLine(DIRECTION.RIGHT, ref pos);
                     break;
                 case DIRECTION.UP:
-                    ConnectLine(DIRECTION.DOWN, ref pos, roomDist, roomSize);
-                    ConnectLine(DIRECTION.RIGHT, ref pos, roomDist, roomSize);
-                    ConnectLine(DIRECTION.UP, ref pos, roomDist, roomSize);
+                    ConnectLine(DIRECTION.DOWN, ref pos);
+                    ConnectLine(DIRECTION.RIGHT, ref pos);
+                    ConnectLine(DIRECTION.UP, ref pos);
                     break;
                 case DIRECTION.DOWN:
-                    ConnectLine(DIRECTION.UP, ref pos, roomDist, roomSize);
-                    ConnectLine(DIRECTION.LEFT, ref pos, roomDist, roomSize);
-                    ConnectLine(DIRECTION.DOWN, ref pos, roomDist, roomSize);
+                    ConnectLine(DIRECTION.UP, ref pos);
+                    ConnectLine(DIRECTION.LEFT, ref pos);
+                    ConnectLine(DIRECTION.DOWN, ref pos);
                     break;
             } /* switch */
         }
@@ -170,46 +174,46 @@ public static class HilbertCurve {
             switch (direction)
             {
                 case DIRECTION.LEFT:
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.UP);
-                    ConnectLine(DIRECTION.RIGHT, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.LEFT);
-                    ConnectLine(DIRECTION.DOWN, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.LEFT);
-                    ConnectLine(DIRECTION.LEFT, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.DOWN);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.UP);
+                    ConnectLine(DIRECTION.RIGHT, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.LEFT);
+                    ConnectLine(DIRECTION.DOWN, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.LEFT);
+                    ConnectLine(DIRECTION.LEFT, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.DOWN);
                     break;
                 case DIRECTION.RIGHT:
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.DOWN);
-                    ConnectLine(DIRECTION.LEFT, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.RIGHT);
-                    ConnectLine(DIRECTION.UP, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.RIGHT);
-                    ConnectLine(DIRECTION.RIGHT, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.UP);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.DOWN);
+                    ConnectLine(DIRECTION.LEFT, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.RIGHT);
+                    ConnectLine(DIRECTION.UP, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.RIGHT);
+                    ConnectLine(DIRECTION.RIGHT, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.UP);
                     break;
                 case DIRECTION.UP:
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.LEFT);
-                    ConnectLine(DIRECTION.DOWN, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.UP);
-                    ConnectLine(DIRECTION.RIGHT, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.UP);
-                    ConnectLine(DIRECTION.UP, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.RIGHT);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.LEFT);
+                    ConnectLine(DIRECTION.DOWN, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.UP);
+                    ConnectLine(DIRECTION.RIGHT, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.UP);
+                    ConnectLine(DIRECTION.UP, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.RIGHT);
                     break;
                 case DIRECTION.DOWN:
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.RIGHT);
-                    ConnectLine(DIRECTION.UP, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.DOWN);
-                    ConnectLine(DIRECTION.LEFT, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.DOWN);
-                    ConnectLine(DIRECTION.DOWN, ref pos, roomDist, roomSize);
-                    HilbertAlgorithm(level - 1, ref pos, roomDist, roomSize, DIRECTION.LEFT);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.RIGHT);
+                    ConnectLine(DIRECTION.UP, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.DOWN);
+                    ConnectLine(DIRECTION.LEFT, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.DOWN);
+                    ConnectLine(DIRECTION.DOWN, ref pos);
+                    HilbertAlgorithm(level - 1, ref pos, DIRECTION.LEFT);
                     break;
             } /* switch */
         } /* if */
     }
 
-    static void ConnectLine(DIRECTION direction, ref Vector3 pos, float roomDist, float roomSize)
+    static void ConnectLine(DIRECTION direction, ref Vector3 pos)
     {
         switch (direction)
         {
