@@ -8,6 +8,7 @@ public class PathGenerator : MonoBehaviour {
     private int powerOf = 0;//Represents the power of 2 that n is (0,1,2,3,4,5,6...)
     public int xOffset, yOffset;
     public int maxRooms = 0;
+    public GameObject roomPrefab;
     public int roomDist = 5;
     [Range(0,20)]
     public int roomSize = 17;
@@ -25,16 +26,23 @@ public class PathGenerator : MonoBehaviour {
     public void Start()
     {
         GeneratePath();
+        for (int i = 0; i < path.Count; i++)
+        {
+            RoomGenerator newRoom = Instantiate(roomPrefab, path[i], Quaternion.identity) as RoomGenerator;
+            Debug.Log(newRoom.transform);
+            //newRoom.width = roomSize;
+            //newRoom.height = roomSize;
+        }
     }
 
     void OnDrawGizmos()
     {
-        if (path.Count != 0)
+        /*if (path.Count != 0)
         {
             HilbertCurve.DrawRooms(HilbertCurve.hilbertPoints, Color.black);
             HilbertCurve.DrawRooms(path, Color.white);
             HilbertCurve.DrawPath(path, Color.red);
-        }
+        }*/
         
     }
 
