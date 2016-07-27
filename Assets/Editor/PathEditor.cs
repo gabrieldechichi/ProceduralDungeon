@@ -10,6 +10,9 @@ public class PathEditor : Editor {
         PathGenerator pathGen = target as PathGenerator;
         if (DrawDefaultInspector() || GUILayout.Button("Generate"))
         {
+            if (pathGen.useRandomSeed)
+                pathGen.ChangeSeed();
+
             pathGen.GeneratePath();
             EditorUtility.SetDirty(pathGen.gameObject);
         }

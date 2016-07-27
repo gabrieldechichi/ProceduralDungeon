@@ -24,10 +24,7 @@ public class PathGenerator : MonoBehaviour {
 
     public void Start()
     {
-        if (path.Count !=0)
-        {
-            Debug.Log("ok");
-        }
+        GeneratePath();
     }
 
     void OnDrawGizmos()
@@ -45,9 +42,6 @@ public class PathGenerator : MonoBehaviour {
     {
         n = lastPowerOf2(n);
 
-        if (useRandomSeed)
-            seed = Random.Range(0, 50000);
-
         System.Random pseudoRandom = new System.Random(seed);
 
         xOffset = pseudoRandom.Next(0, n + 1);
@@ -58,6 +52,11 @@ public class PathGenerator : MonoBehaviour {
 
         List<Vector3> subGrid = HilbertCurve.GetSubGrid(xOffset, yOffset, n);
         path = HilbertCurve.GeneratePath(HilbertCurve.hilbertPoints, subGrid, deadEndsNumb, maxRooms);
+    }
+
+    public void ChangeSeed()
+    {
+        seed = Random.Range(0, 50000);
     }
 
     int lastPowerOf2(int n)
