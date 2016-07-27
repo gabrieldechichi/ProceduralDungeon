@@ -88,8 +88,6 @@ public static class HilbertCurve {
             {
                 if (!newPath.Contains(neighboors[j]) && subGrid.Contains(neighboors[j]))
                 {
-                    Gizmos.color = Color.yellow;
-                    Gizmos.DrawCube(neighboors[j], Vector3.one*roomSize*1.3f);
                     newPath.Insert(i + changeIndex, neighboors[j]);
                     newPath.Insert(i + 1 + changeIndex, path[i]);
                     changeIndex+=2;

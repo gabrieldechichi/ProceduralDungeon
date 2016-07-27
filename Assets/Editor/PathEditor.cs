@@ -7,11 +7,10 @@ public class PathEditor : Editor {
 
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
         PathGenerator pathGen = target as PathGenerator;
-        if (GUILayout.Button("Generate"))
+        if (DrawDefaultInspector() || GUILayout.Button("Generate"))
         {
-            pathGen.Draw();
+            pathGen.GeneratePath();
             EditorUtility.SetDirty(pathGen.gameObject);
         }
 
