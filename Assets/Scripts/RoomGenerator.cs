@@ -43,7 +43,7 @@ public class RoomGenerator : MonoBehaviour
         int[,] borderedMap = GenerateBorders(borderSize);
 
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
-        meshGen.GenerateMesh(borderedMap);
+        meshGen.GenerateMesh(borderedMap,1);
     }
 
 

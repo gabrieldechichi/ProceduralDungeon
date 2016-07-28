@@ -8,6 +8,7 @@ public class CaveGenerator : MonoBehaviour
 
     public int width;
     public int height;
+    public int borderSize = 3;
 
     public string seed;
     public bool useRandomSeed;
@@ -46,7 +47,6 @@ public class CaveGenerator : MonoBehaviour
 
         ProcessMap();
 
-        int borderSize = 1;
         int[,] borderedMap = new int[width + borderSize * 2, height + borderSize * 2];
 
         for (int x = 0; x < borderedMap.GetLength(0); x++)
