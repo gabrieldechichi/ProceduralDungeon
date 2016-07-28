@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 
 public class RoomGenerator : MonoBehaviour
 {
@@ -15,8 +14,6 @@ public class RoomGenerator : MonoBehaviour
 
     [Range(0, 100)]
     public int randomFillPercent;
-    [Range(1,10)]
-    public int smoothInterations = 2;
 
     int[,] map;
 
@@ -38,12 +35,10 @@ public class RoomGenerator : MonoBehaviour
         map = new int[width, height];
         RandomFillMap();
 
-        for (int i = 0; i < smoothInterations; i++)
+        for (int i = 0; i < 2; i++)
         {
             SmoothMap();
         }
-
-        ProcessMap();
 
         int[,] borderedMap = GenerateBorders(borderSize);
 
@@ -67,8 +62,8 @@ public class RoomGenerator : MonoBehaviour
             {
                 if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
                 {
-                    map[x, y] = 1;//Encourage walls on the borders
-                    //map[x, y] = (pseudoRandom.Next(0, 100) < randomFillPercent) ? 1 : 0;
+                    //map[x, y] = 1;
+                    map[x, y] = (pseudoRandom.Next(0, 100) < randomFillPercent) ? 1 : 0;
                 }
                 else
                 {
@@ -120,7 +115,7 @@ public class RoomGenerator : MonoBehaviour
         {
             for (int neighbourY = gridY - 1; neighbourY <= gridY + 1; neighbourY++)
             {
-                if (IsInMapRange(neighbourX,neighbourY))
+                if (neighbourX >= 0 && neighbourX < width && neighbourY >= 0 && neighbourY < height)
                 {
                     if (neighbourX != gridX || neighbourY != gridY)
                     {
@@ -135,94 +130,6 @@ public class RoomGenerator : MonoBehaviour
         }
 
         return wallCount;
-    }
-
-    List<Coord> GetRegionTiles(int startX, int startY)
-    {
-        List<Coord> tiles = new List<Coord>();
-        int[,] mapFlags = new int[width, height];//store the already checked tiles
-        int tileType = map[startX, startY];
-
-        Queue<Coord> queue = new Queue<Coord>();
-        queue.Enqueue(new Coord(startX, startY));
-        mapFlags[startX, startY] = 1;
-
-        while (queue.Count > 0)
-        {
-            Coord tile = queue.Dequeue();
-            tiles.Add(tile);
-
-            for (int x = tile.tileX-1; x < tile.tileX+1; x++)
-            {
-                for (int y = tile.tileY-1; y < tile.tileY+1; y++)
-                {
-                    if (IsInMapRange(x, y) && (y==tile.tileY || x==tile.tileX))
-                    {
-                        if (mapFlags[x,y] == 0 && map[x,y] == tileType)
-                        {
-                            mapFlags[x, y] = 1;
-                            queue.Enqueue(new Coord(x, y));
-                        }
-                    }
-                }
-            }
-        }
-
-        return tiles;
-    }
-
-    List<List<Coord>> GetRegions(int tileType)
-    {
-        List<List<Coord>> regions = new List<List<Coord>>();
-        int[,] mapFlags = new int[width, height];
-
-        for(int x = 0;x<width;x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                if(mapFlags[x,y] == 0 && map[x,y] == tileType)
-                {
-                    List<Coord> newRegion = GetRegionTiles(x, y);
-                    regions.Add(newRegion);
-
-                    foreach(Coord tile in newRegion)
-                        map[tile.tileX, tile.tileY] = 1;
-                }
-            }
-        }
-
-        return regions;
-    }
-
-    void ProcessMap()
-    {
-        List<List<Coord>> wallRegions = GetRegions(1);
-        int wallThesholdCount = 50;//If any wall region has less than 50 tiles, it will be discarted
-        foreach(List<Coord> wallRegion in wallRegions)
-        {
-            if(wallRegion.Count < wallThesholdCount)
-            {
-                foreach (Coord tile in wallRegion)
-                    map[tile.tileX, tile.tileY] = 0;
-            }
-        }
-
-    }
-
-    bool IsInMapRange(int x, int y)
-    {
-        return x >=0 && x < width && y >= 0 && y < height;
-    }
-
-    struct Coord
-    {
-        public int tileX, tileY;
-
-        public Coord(int x, int y)
-        {
-            tileX = x;
-            tileY = y;
-        }
     }
 
 
