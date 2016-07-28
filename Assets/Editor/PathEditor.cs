@@ -8,13 +8,24 @@ public class PathEditor : Editor {
     public override void OnInspectorGUI()
     {
         PathGenerator pathGen = target as PathGenerator;
-        if (DrawDefaultInspector() || GUILayout.Button("Generate"))
+        
+        if (DrawDefaultInspector())
+        {
+            pathGen.GeneratePath();
+        }
+        else if (GUILayout.Button("Generate"))
         {
             if (pathGen.useRandomSeed)
                 pathGen.ChangeSeed();
 
             pathGen.GeneratePath();
+            pathGen.ResetRooms();
+
             EditorUtility.SetDirty(pathGen.gameObject);
+        }
+        else if (GUILayout.Button("Reset Map"))
+        {
+            pathGen.ResetRooms();
         }
 
     }

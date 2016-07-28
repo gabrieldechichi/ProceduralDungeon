@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEditor;
 using System.Collections;
 
 public class PathGenerator : MonoBehaviour {
@@ -8,41 +9,35 @@ public class PathGenerator : MonoBehaviour {
     private int powerOf = 0;//Represents the power of 2 that n is (0,1,2,3,4,5,6...)
     public int xOffset, yOffset;
     public int maxRooms = 0;
-    public GameObject roomPrefab;
+    public Transform roomPrefab;
     public int roomDist = 5;
     [Range(0,20)]
     public int roomSize = 17;
-    public bool addDeadEnds = false;
     [Range(0,20)]
     public int deadEndsNumb = 1;
 
     public int seed;
     public bool useRandomSeed = false;
 
+    public List<RoomGenerator> roomList = new List<RoomGenerator>();
+
     List<Vector3> path = new List<Vector3>();
 
-    public RoomGenerator roomGenerator;
+    public bool changeMap;
 
     public void Start()
     {
-        GeneratePath();
-        for (int i = 0; i < path.Count; i++)
-        {
-            RoomGenerator newRoom = Instantiate(roomPrefab, path[i], Quaternion.identity) as RoomGenerator;
-            Debug.Log(newRoom.transform);
-            //newRoom.width = roomSize;
-            //newRoom.height = roomSize;
-        }
+
     }
 
     void OnDrawGizmos()
     {
-        /*if (path.Count != 0)
+        if (path.Count != 0)
         {
-            HilbertCurve.DrawRooms(HilbertCurve.hilbertPoints, Color.black);
-            HilbertCurve.DrawRooms(path, Color.white);
+            //HilbertCurve.DrawRooms(HilbertCurve.hilbertPoints, Color.black);
+            //HilbertCurve.DrawRooms(path, Color.white);
             HilbertCurve.DrawPath(path, Color.red);
-        }*/
+        }
         
     }
 
@@ -60,6 +55,34 @@ public class PathGenerator : MonoBehaviour {
 
         List<Vector3> subGrid = HilbertCurve.GetSubGrid(xOffset, yOffset, n);
         path = HilbertCurve.GeneratePath(HilbertCurve.hilbertPoints, subGrid, deadEndsNumb, maxRooms);
+
+        if (changeMap)
+            ResetRooms();
+
+    }
+
+    public void ResetRooms()
+    {
+        roomList.Clear();
+
+        if (this.transform.childCount > 0)
+            DestroyImmediate(this.transform.GetChild(0).gameObject);
+
+        GameObject roomSet = new GameObject("Room Set");
+        roomSet.transform.parent = this.transform;
+        for (int i = 0; i < path.Count; i++)
+        {   
+            Transform room = (Transform)Instantiate(roomPrefab, path[i], Quaternion.identity);
+            room.transform.parent = roomSet.transform;
+            RoomGenerator roomGen = room.GetComponent<RoomGenerator>();
+
+            roomGen.width = roomSize;
+            roomGen.height = roomSize;
+            roomGen.seed = Random.Range(0, 50000);
+            roomGen.randomFillPercent = Random.Range(25, 35);
+            roomList.Add(roomGen);
+            roomGen.GenerateMap();
+        }
     }
 
     public void ChangeSeed()

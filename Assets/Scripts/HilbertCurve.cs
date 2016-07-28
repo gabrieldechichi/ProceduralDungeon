@@ -72,6 +72,8 @@ public static class HilbertCurve {
     {
         List<Vector3> neighboors = new List<Vector3>();
         List<Vector3> newPath = new List<Vector3>(path);
+        if (maxDeadEnds == 0)
+            return newPath;
 
         int changeIndex = 1;
         int addedDeadEnds = 0;
