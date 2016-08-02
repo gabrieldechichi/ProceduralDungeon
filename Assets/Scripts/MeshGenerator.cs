@@ -11,8 +11,10 @@ public class MeshGenerator : MonoBehaviour
 
     public bool is2D;
 
-    List<Vector3> vertices;
-    List<int> triangles;
+    List<Vector3> wallVertices;
+    List<int> wallTriangles;
+    List<Vector3> groundVertices;
+    List<int> groundTriangles;
 
     Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>>();
     List<List<int>> outlines = new List<List<int>>();
@@ -27,9 +29,10 @@ public class MeshGenerator : MonoBehaviour
 
         squareGrid = new SquareGrid(map, squareSize);
 
-        vertices = new List<Vector3>();
-        triangles = new List<int>();
+        wallVertices = new List<Vector3>();
+        wallTriangles = new List<int>();
 
+        //Creates the triangle meshs for each Square in Square Grid based on it's configuration
         for (int x = 0; x < squareGrid.squares.GetLength(0); x++)
         {
             for (int y = 0; y < squareGrid.squares.GetLength(1); y++)
@@ -41,16 +44,16 @@ public class MeshGenerator : MonoBehaviour
         Mesh mesh = new Mesh();
         caveMF.mesh = mesh;
 
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        mesh.vertices = wallVertices.ToArray();
+        mesh.triangles = wallTriangles.ToArray();
         mesh.RecalculateNormals();
 
         int tileAmount = 10;
-        Vector2[] uvs = new Vector2[vertices.Count];
-        for (int i = 0; i < vertices.Count; i++)
+        Vector2[] uvs = new Vector2[wallVertices.Count];
+        for (int i = 0; i < wallVertices.Count; i++)
         {
-            float percentX = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].x) * tileAmount;
-            float percentY = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].z) * tileAmount;
+            float percentX = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, wallVertices[i].x) * tileAmount;
+            float percentY = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, wallVertices[i].z) * tileAmount;
             uvs[i] = new Vector2(percentX, percentY);
         }
         mesh.uv = uvs;
@@ -84,10 +87,10 @@ public class MeshGenerator : MonoBehaviour
             for (int i = 0; i < outline.Count - 1; i++)
             {
                 int startIndex = wallVertices.Count;
-                wallVertices.Add(vertices[outline[i]]); // left
-                wallVertices.Add(vertices[outline[i + 1]]); // right
-                wallVertices.Add(vertices[outline[i]] - Vector3.up * wallHeight); // bottom left
-                wallVertices.Add(vertices[outline[i + 1]] - Vector3.up * wallHeight); // bottom right
+                wallVertices.Add(this.wallVertices[outline[i]]); // left
+                wallVertices.Add(this.wallVertices[outline[i + 1]]); // right
+                wallVertices.Add(this.wallVertices[outline[i]] - Vector3.up * wallHeight); // bottom left
+                wallVertices.Add(this.wallVertices[outline[i + 1]] - Vector3.up * wallHeight); // bottom right
 
                 wallTriangles.Add(startIndex + 0);
                 wallTriangles.Add(startIndex + 2);
@@ -127,7 +130,7 @@ public class MeshGenerator : MonoBehaviour
 
             for (int i = 0; i < outline.Count; i++)
             {
-                edgePoints[i] = new Vector2(vertices[outline[i]].x, vertices[outline[i]].z);
+                edgePoints[i] = new Vector2(wallVertices[outline[i]].x, wallVertices[outline[i]].z);
             }
             edgeCollider.points = edgePoints;
         }
@@ -136,7 +139,7 @@ public class MeshGenerator : MonoBehaviour
 
     void TriangulateSquare(Square square)
     {
-        switch (square.configuration)
+        switch (square.wallConfiguration)
         {
             case 0:
                 break;
@@ -216,23 +219,24 @@ public class MeshGenerator : MonoBehaviour
 
     }
 
+    //Assign a vertexIndex to a Node (vertex)
     void AssignVertices(Node[] points)
     {
         for (int i = 0; i < points.Length; i++)
         {
-            if (points[i].vertexIndex == -1)
+            if (points[i].vertexIndex == -1)//hasn't been assigned yet
             {
-                points[i].vertexIndex = vertices.Count;
-                vertices.Add(points[i].position);
+                points[i].vertexIndex = wallVertices.Count;
+                wallVertices.Add(points[i].position);
             }
         }
     }
 
     void CreateTriangle(Node a, Node b, Node c)
     {
-        triangles.Add(a.vertexIndex);
-        triangles.Add(b.vertexIndex);
-        triangles.Add(c.vertexIndex);
+        wallTriangles.Add(a.vertexIndex);
+        wallTriangles.Add(b.vertexIndex);
+        wallTriangles.Add(c.vertexIndex);
 
         Triangle triangle = new Triangle(a.vertexIndex, b.vertexIndex, c.vertexIndex);
         AddTriangleToDictionary(triangle.vertexIndexA, triangle);
@@ -257,7 +261,7 @@ public class MeshGenerator : MonoBehaviour
     void CalculateMeshOutlines()
     {
 
-        for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++)
+        for (int vertexIndex = 0; vertexIndex < wallVertices.Count; vertexIndex++)
         {
             if (!checkedVertices.Contains(vertexIndex))
             {
@@ -286,8 +290,8 @@ public class MeshGenerator : MonoBehaviour
             Vector3 dirOld = Vector3.zero;
             for (int i = 0; i < outlines[outlineIndex].Count; i++)
             {
-                Vector3 p1 = vertices[outlines[outlineIndex][i]];
-                Vector3 p2 = vertices[outlines[outlineIndex][(i + 1) % outlines[outlineIndex].Count]];
+                Vector3 p1 = wallVertices[outlines[outlineIndex][i]];
+                Vector3 p2 = wallVertices[outlines[outlineIndex][(i + 1) % outlines[outlineIndex].Count]];
                 Vector3 dir = p1 - p2;
                 if (dir != dirOld)
                 {
@@ -388,6 +392,9 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Contains all the square in the map
+    /// </summary>
     public class SquareGrid
     {
         public Square[,] squares;
@@ -415,19 +422,23 @@ public class MeshGenerator : MonoBehaviour
             {
                 for (int y = 0; y < nodeCountY - 1; y++)
                 {
-                    squares[x, y] = new Square(controlNodes[x, y + 1], controlNodes[x + 1, y + 1], controlNodes[x + 1, y], controlNodes[x, y]);
+                    squares[x, y] = new Square(controlNodes[x, y + 1], controlNodes[x + 1, y + 1], controlNodes[x + 1, y], controlNodes[x, y]);//Create a square with control nodes 1 to 4
                 }
             }
 
         }
     }
 
+    /// <summary>
+    /// 4 control nodes (corners) and 4 midpoint nodes. Can have 16 configurations which will determine how the mesh will be generated in this partcular square.
+    /// </summary>
     public class Square
     {
 
         public ControlNode topLeft, topRight, bottomRight, bottomLeft;
         public Node centreTop, centreRight, centreBottom, centreLeft;
-        public int configuration;
+        public int wallConfiguration;
+        public int groundConfiguration;
 
         public Square(ControlNode _topLeft, ControlNode _topRight, ControlNode _bottomRight, ControlNode _bottomLeft)
         {
@@ -442,13 +453,15 @@ public class MeshGenerator : MonoBehaviour
             centreLeft = bottomLeft.above;
 
             if (topLeft.active)
-                configuration += 8;
+                wallConfiguration += 8;
             if (topRight.active)
-                configuration += 4;
+                wallConfiguration += 4;
             if (bottomRight.active)
-                configuration += 2;
+                wallConfiguration += 2;
             if (bottomLeft.active)
-                configuration += 1;
+                wallConfiguration += 1;
+
+            groundConfiguration = 15 - wallConfiguration;
         }
 
     }
@@ -464,6 +477,9 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Each control node has 2 nodes (above and right). It can be on (wall) or off (not a wall)
+    /// </summary>
     public class ControlNode : Node
     {
 
